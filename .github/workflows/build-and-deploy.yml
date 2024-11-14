@@ -6,6 +6,8 @@ on:
   workflow_dispatch: # Permet de déclencher manuellement
 
 jobs:
+
+
   check-version-exists:
     runs-on: ubuntu-latest
     outputs:
@@ -26,11 +28,11 @@ jobs:
           VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
           if git rev-parse "version-$VERSION" >/dev/null 2>&1; then
             echo "Tag version-$VERSION already exists. Build not required."
-            echo "::set-output name=build_required::false"
+            echo "build_required=false" >> $GITHUB_OUTPUT
           else
             echo "No existing tag for version $VERSION. Proceeding with build."
-            echo "::set-output name=version::$VERSION"
-            echo "::set-output name=build_required::true"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "build_required=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Check if Docker tag exists
@@ -41,11 +43,14 @@ jobs:
             https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/ceremonyclient/tags/${{ steps.version_check.outputs.version }})
           if [ "$response" -eq 200 ]; then
             echo "Docker tag already exists. Skipping build."
-            echo "::set-output name=build_required::false"
+            echo "build_required=false" >> $GITHUB_OUTPUT
           else
             echo "Docker tag not found. Proceeding with build."
-            echo "::set-output name=build_required::true"
+            echo "build_required=true" >> $GITHUB_OUTPUT
           fi
+
+
+
 
   check-and-build:
     needs: check-version-exists
@@ -66,46 +71,39 @@ jobs:
           VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
           if [[ "$VERSION" =~ ^2\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Version found: $VERSION"
-            echo "::set-output name=version::v$VERSION"
+            echo "version=v$VERSION" >> $GITHUB_ENV
           else
             echo "No matching version found"
             exit 1
           fi
       
       - name: Clone the repository
-        if: steps.version_check.outputs.version
         run: |
           git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
           cd ceremonyclient
-          git checkout -b ${{ steps.version_check.outputs.version }}
+          git checkout -b ${{ env.version }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        if: steps.version_check.outputs.version
 
       - name: Install Task
-        run: |
-          sudo sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
-        if: steps.version_check.outputs.version
+        uses: wizhi/setup-task@v1
 
       - name: Build Docker Image
         run: |
           cd ceremonyclient
           task docker:build
-        if: steps.version_check.outputs.version
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-        if: steps.version_check.outputs.version
 
-      - name: Build and Push Docker Image
+      - name: Push Docker Image
         run: |
           cd ceremonyclient
           task docker:push
-        if: steps.version_check.outputs.version
 
       - name: Tag the version in Git
         run: |
