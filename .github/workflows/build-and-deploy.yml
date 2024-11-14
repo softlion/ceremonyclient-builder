@@ -94,7 +94,7 @@ jobs:
           cd ceremonyclient
           #task build_node_amd64_linux
           #task build_qclient_amd64_linux
-          task build
+          task build:source:
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
