@@ -1,0 +1,111 @@
+name: Check and Build Docker Image
+
+on:
+  schedule:
+    - cron: "0 * * * *"  # Exécute toutes les heures
+  workflow_dispatch: # Permet de déclencher manuellement
+
+jobs:
+  check-version-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version_check.outputs.version }}
+      build_required: ${{ steps.version_check.outputs.build_required }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download release file
+        run: |
+          curl -o release.txt https://releases.quilibrium.com/release
+
+      - name: Extract version and check for existing Git tag
+        id: version_check
+        run: |
+          VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
+          if git rev-parse "version-$VERSION" >/dev/null 2>&1; then
+            echo "Tag version-$VERSION already exists. Build not required."
+            echo "::set-output name=build_required::false"
+          else
+            echo "No existing tag for version $VERSION. Proceeding with build."
+            echo "::set-output name=version::$VERSION"
+            echo "::set-output name=build_required::true"
+          fi
+
+      - name: Check if Docker tag exists
+        if: steps.version_check.outputs.build_required == 'true'
+        id: tag_check
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://hub.docker.com/v2/repositories/${{ secrets.DOCKERHUB_USERNAME }}/ceremonyclient/tags/${{ steps.version_check.outputs.version }})
+          if [ "$response" -eq 200 ]; then
+            echo "Docker tag already exists. Skipping build."
+            echo "::set-output name=build_required::false"
+          else
+            echo "Docker tag not found. Proceeding with build."
+            echo "::set-output name=build_required::true"
+          fi
+
+  check-and-build:
+    needs: check-version-exists
+    if: needs.check-version-exists.outputs.build_required == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download release file
+        run: |
+          curl -o release.txt https://releases.quilibrium.com/release
+          
+      - name: Verify version pattern
+        id: version_check
+        run: |
+          VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
+          if [[ $VERSION =~ ^2\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::set-output name=version::v$VERSION"
+          else
+            echo "No matching version found"
+            exit 1
+      
+      - name: Clone the repository
+        if: steps.version_check.outputs.version
+        run: |
+          git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
+          cd ceremonyclient
+          git checkout -b ${{ steps.version_check.outputs.version }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        if: steps.version_check.outputs.version
+
+      - name: Install Task
+        run: |
+          sudo sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d
+        if: steps.version_check.outputs.version
+
+      - name: Build Docker Image
+        run: |
+          cd ceremonyclient
+          task docker:build
+        if: steps.version_check.outputs.version
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        if: steps.version_check.outputs.version
+
+      - name: Build and Push Docker Image
+        run: |
+          cd ceremonyclient
+          task docker:push
+        if: steps.version_check.outputs.version
+
+      - name: Tag the version in Git
+        run: |
+          git tag version-${{ needs.check-version-exists.outputs.version }}
+          git push origin version-${{ needs.check-version-exists.outputs.version }}
