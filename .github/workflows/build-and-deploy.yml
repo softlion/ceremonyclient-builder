@@ -64,11 +64,13 @@ jobs:
         id: version_check
         run: |
           VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
-          if [[ $VERSION =~ ^2\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ "$VERSION" =~ ^2\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version found: $VERSION"
             echo "::set-output name=version::v$VERSION"
           else
             echo "No matching version found"
             exit 1
+          fi
       
       - name: Clone the repository
         if: steps.version_check.outputs.version
