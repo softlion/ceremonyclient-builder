@@ -61,23 +61,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download release file
+      - name: Get version from the above job
         run: |
-          curl -o release.txt https://releases.quilibrium.com/release
           echo "version=${{ needs.check-version-exists.outputs.version }}" >> $GITHUB_ENV
-          
-      - name: Clone the repository
+          TRANSFORMED_VERSION=$(echo "${{ env.version }}" | sed -E 's/(v[0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)/\1-p\2/')
+          echo "transformedVersion=$TRANSFORMED_VERSION" >> $GITHUB_ENV
+          echo "Building ${{ env.version }} from tag ${{ env.transformedVersion }}"
+
+      #Make sure the job does not run again if an error occured 
+      - name: Tag the version in this Git
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          git tag ${{ env.version }}
+          git push origin --tags
+
+      - name: Clone ceremonyclient
         run: |
           git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
           cd ceremonyclient
-          TRANSFORMED_VERSION=$(echo "${{ env.version }}" | sed -E 's/(v[0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)/\1-p\2/')
-          git checkout -b $TRANSFORMED_VERSION
+          git checkout -b ${{ env.transformedVersion }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Install Task
+      - name: Install Go Task
         uses: arduino/setup-task@v2
+
+      - name: Display infos
+        run: |
+          cd ceremonyclient
+          task status
       
       - name: Build Docker Image
         run: |
@@ -96,9 +109,3 @@ jobs:
         run: |
           cd ceremonyclient
           task push
-
-      #todo: move this up so the job is not run again if an error occured 
-      - name: Tag the version in this Git
-        run: |
-          git tag ${{ env.version }}
-          git push origin --tags
