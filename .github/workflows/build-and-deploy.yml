@@ -1,8 +1,8 @@
 name: Check and Build Docker Image
 
 on:
-  schedule:
-    - cron: "0 * * * *"  # Exécute toutes les heures
+#  schedule:
+#    - cron: "0 0 * * *"  # Run once per 24h
   workflow_dispatch: # Permet de déclencher manuellement
 
 jobs:
@@ -22,15 +22,16 @@ jobs:
         run: |
           curl -o release.txt https://releases.quilibrium.com/release
 
-      - name: Extract version and check for existing Git tag
+      # Don't build again if build failed previously
+      - name: Extract current version and check for existing Git tag
         id: version_check
         run: |
-          VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
-          if git rev-parse "version-$VERSION" >/dev/null 2>&1; then
-            echo "Tag version-$VERSION already exists. Build not required."
+          VERSION=v$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists. Build not required."
             echo "build_required=false" >> $GITHUB_OUTPUT
           else
-            echo "No existing tag for version $VERSION. Proceeding with build."
+            echo "No existing tag $VERSION. Proceeding with build."
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "build_required=true" >> $GITHUB_OUTPUT
           fi
@@ -46,13 +47,12 @@ jobs:
             echo "build_required=false" >> $GITHUB_OUTPUT
           else
             echo "Docker tag not found. Proceeding with build."
-            echo "build_required=true" >> $GITHUB_OUTPUT
           fi
 
 
 
 
-  check-and-build:
+  build:
     needs: check-version-exists
     if: needs.check-version-exists.outputs.build_required == 'true'
     runs-on: ubuntu-latest
@@ -64,24 +64,14 @@ jobs:
       - name: Download release file
         run: |
           curl -o release.txt https://releases.quilibrium.com/release
+          echo "version=${{ needs.check-version-exists.outputs.version }}" >> $GITHUB_ENV
           
-      - name: Verify version pattern
-        id: version_check
-        run: |
-          VERSION=$(head -n 1 release.txt | grep -oP 'node-\K[\d.]+')
-          if [[ "$VERSION" =~ ^2\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Version found: $VERSION"
-            echo "version=v$VERSION" >> $GITHUB_ENV
-          else
-            echo "No matching version found"
-            exit 1
-          fi
-      
       - name: Clone the repository
         run: |
           git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
           cd ceremonyclient
-          git checkout -b ${{ env.version }}
+          TRANSFORMED_VERSION=$(echo "${{ env.version }}" | sed -E 's/(v[0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)/\1-p\2/')
+          git checkout -b $TRANSFORMED_VERSION
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -107,7 +97,8 @@ jobs:
           cd ceremonyclient
           task push
 
-      - name: Tag the version in Git
+      #todo: move this up so the job is not run again if an error occured 
+      - name: Tag the version in this Git
         run: |
-          git tag version-${{ needs.check-version-exists.outputs.version }}
-          git push origin version-${{ needs.check-version-exists.outputs.version }}
+          git tag ${{ env.version }}
+          git push origin --tags
