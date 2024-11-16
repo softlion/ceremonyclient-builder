@@ -26,11 +26,12 @@ Sample result:
 ```text
 Signature check passed
 Peer ID: -------------------------------------------
-Version: 1.4.19
-Max Frame: 61
-Peer Score: 0
-Note: Balance is strictly rewards earned with 1.4.19+, check https://www.quilibrium.com/rewards for more info about previous rewards.
-Unclaimed balance: 0.029400000000 QUIL
+Version: 2.0.3-p4
+Max Frame: 55586
+Prover Ring: 5
+Seniority: 2737593
+Owned balance: 0.9536040931000 QUIL
+Note: bridged balance is not reflected here, you must bridge back to QUIL to use QUIL on mainnet.
 ```
 
 ## Host setup (Debian)
