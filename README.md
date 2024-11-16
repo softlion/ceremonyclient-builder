@@ -9,7 +9,7 @@ helm upgrade quilibrium helm/quilibrium --install \
   --set persistence.existingClaim=yourPVCName
 ```
 
-And check the logs for errors  
+And check the logs for health  
 ```shell
 kubectl logs -f quilibrium-xxxxxxxxxx-xxxxx
 ```
