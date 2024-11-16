@@ -148,3 +148,22 @@ jobs:
 # docker rmi HASH_HASH -f
 # cd /usr/local/bin/
 # docker push --all-tags vapolia/quilibrium
+
+
+  update:
+    needs: build
+    if: needs.check-version-exists.outputs.build_required == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Kubeconfig
+        run: |
+          mkdir $HOME/.kube
+          echo "${{ secrets.VAPOLIA_KUBECONFIG }}" >> $HOME/.kube/config
+
+      - name: Upgrade Helm release
+        run: |
+          helm upgrade -n vapolia quilibrium helm/quilibrium --install \
+            --set persistence.existingClaim=quilibrium

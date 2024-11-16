@@ -1,0 +1,38 @@
+send_stats: "/dns/stats.quilibrium.com/tcp/443"
+
+image:
+  repository: vapolia/quilibrium
+  tag: latest
+  pullPolicy: Always
+
+ports:
+  p2p: 8336
+  grpc: 8337
+  rest: 8338
+  listen_grpc: "/ip4/0.0.0.0/tcp/" #grpc is appended automatically
+  listen_rest: "/ip4/0.0.0.0/tcp/" #rest is appended automatically
+
+# config:
+#  .config: ""
+# .config: |-
+#Add your '.config' file content here
+
+deployment:
+  replicaCount: 1
+  #nodeSelector:
+  #- ...
+  #affinity:
+  #- ...
+  #tolerations:
+  #- ...
+
+persistence:
+  #if existing claim:
+  #existingClaim: 
+
+  #if no existing claim, create a temp pvc:
+  accessMode: ReadWriteOnce
+  size: 100Ki
+  ## Set to "-" to result in storageClassName: "", which disables dynamic provisioning.
+  ## If undefined or null (default), no storageClassName is set. K8s will use the default provisioner.
+  # storageClass: "-"

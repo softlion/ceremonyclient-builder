@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ template "chart.fullname" . }}-public
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name" . }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion | quote }}
+
+spec:
+  type: NodePort
+  selector:
+    app: {{ template "chart.name" . }}
+
+  ports:
+
+  - name: p2p
+    protocol: UDP
+    port: {{ .Values.ports.p2p }}
+    targetPort: 8336

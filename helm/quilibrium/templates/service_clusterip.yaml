@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ template "chart.fullname" . }}-internal
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name" . }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion | quote }}
+
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ template "chart.name" . }}
+
+  ports:
+
+  - name: grpc
+    protocol: TCP
+    port: {{ .Values.ports.grpc }}
+    targetPort: 8337
+
+  - name: rest
+    protocol: TCP
+    port: {{ .Values.ports.rest }}
+    targetPort: 8338

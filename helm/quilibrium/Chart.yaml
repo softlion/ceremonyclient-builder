@@ -1,0 +1,12 @@
+apiVersion: v1
+description: A Helm chart for quilibrium
+name: quilibrium
+version: 0.0.1
+appVersion: 1.0.0
+home: https://vapolia.eu/
+icon: https://quilibrium.com/logo.png
+sources:
+  - https://source.quilibrium.com/quilibrium/ceremonyclient/
+maintainers:
+  - name: softlion
+    email: benjamin@vapolia.fr

@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ template "chart.fullname" . }}
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.name" . }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion | quote }}
+
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "chart.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "chart.name" . }}
+    spec:
+      containers:
+      - name: {{ template "chart.name" . }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: p2p
+          containerPort: {{ .Values.ports.p2p }}
+          protocol: UDP
+        - name: grpc
+          containerPort: {{ .Values.ports.grpc }}
+          protocol: TCP
+        - name: rest
+          containerPort: {{ .Values.ports.rest }}
+          protocol: TCP
+        env:
+
+        - name: DEFAULT_LISTEN_GRPC_MULTIADDR
+          value: {{ .Values.ports.listen_grpc }}{{ .Values.ports.grpc }}
+
+        - name: DEFAULT_LISTEN_REST_MULTIADDR
+          value: {{ .Values.ports.listen_rest }}{{ .Values.ports.rest }}
+
+        - name: DEFAULT_STATS_MULTIADDR
+          value: {{ .Values.send_stats }}
+
+        # livenessProbe:
+        #   exec:
+        #     command: ["grpcurl", "-plaintext", "localhost:{{ .Values.ports.grpc }}", "list", "quilibrium.node.node.pb.NodeService"]
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 10
+        # readinessProbe:
+        #   exec:
+        #     command: ["grpcurl", "-plaintext", "localhost:{{ .Values.ports.grpc }}", "list", "quilibrium.node.node.pb.NodeService"]
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 10
+        volumeMounts:
+        - name: config-volume
+          mountPath: /root/.config
+
+      volumes:
+      - name: config-volume
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.existingClaim | default (include "chart.fullname" .) }}
+
+      {{- if .Values.deployment.nodeSelector -}}
+      {{- with .Values.deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end -}}
+
+      {{- if .Values.deployment.affinity -}}
+      {{- with .Values.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end -}}
+
+      {{- if .Values.deployment.tolerations -}}
+      {{- with .Values.deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end -}}
