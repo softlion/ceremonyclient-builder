@@ -45,7 +45,8 @@ sudo sysctl --system
 ```
 
 ## Docker Build
-Uses the official signed binaries and a slim debian container.
+Built by github action, it uses the official signed binaries and a slim debian container.  
+It is published on [docker hub](https://hub.docker.com/r/vapolia/quilibrium/tags)
 
 ## Links
 
@@ -59,3 +60,6 @@ https://github.com/demipoet/quilibrium-guide-github
 
 Videos:  
 https://www.youtube.com/watch?v=GfEqWw-p_yU
+
+Dashboard:  
+https://github.com/fpatron/Quilibrium-Dashboard
