@@ -131,13 +131,16 @@ jobs:
                 #exit 1;
               fi
           done
+          
+          version=$(awk -F'-' 'NR==1 {print $2}' release.txt)
+          chmod +x "node/node-$version-linux-amd64"
+          chmod +x "client/qclient-$version-linux-amd64"
 
       - name: Build Image
         run: |
           cd ceremonyclient
 
           sed -i '1s/.*/FROM golang:1.23.3-alpine3.20 AS build/' Dockerfile.release
-          #qclient-2.0.4-linux-amd64
           sed -i 's|RUN go build -o qclient ./main.go|RUN cp "qclient-\${NODE_VERSION}-linux-amd64" "qclient"|' Dockerfile.release
           sed -i 's/FROM alpine:3.19/FROM debian:bookworm-slim/' Dockerfile.release
           task build
@@ -156,7 +159,7 @@ jobs:
           docker tag quilibrium:release "vapolia/quilibrium:$TRANSFORMED_VERSION"
           docker push --all-tags vapolia/quilibrium
 
-#docker run -it --entrypoint /bin/sh vapolia/quilibrium:2.0.3-p4
+#docker run -it --entrypoint /bin/sh vapolia/quilibrium:2.0.4
 # docker run -it --name testquil --entrypoint bash 1bcc1d5bebf2
 # docker ps -a
 # docker rm testquil
