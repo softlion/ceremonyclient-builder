@@ -126,7 +126,7 @@ jobs:
           cd ceremonyclient
 
           sed -i '1s/.*/FROM golang:1.23.3-alpine3.20 AS build/' Dockerfile.release
-          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "client/build/amd64_linux/qclient" "qclient"|' Dockerfile.release
+          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "build/amd64_linux/qclient" "qclient"|' Dockerfile.release
           sed -i 's/FROM alpine:3.19/FROM debian:bookworm-slim/' Dockerfile.release
           task build
 
