@@ -31,13 +31,15 @@ jobs:
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "build_required=true" >> $GITHUB_OUTPUT
           fi
+          echo "build_required=${build_required}" >> $GITHUB_ENV
+
 
       - name: Check if Docker tag exists
-        if: steps.version_check.outputs.build_required == 'true'
+        if: env.build_required == 'true'
         id: tag_check
         run: |
           httpCode=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://hub.docker.com/v2/repositories/vapolia/quilibrium/tags/${{ steps.version_check.outputs.version }})/
+            https://hub.docker.com/v2/repositories/vapolia/quilibrium/tags/${{ steps.version_check.outputs.version }})
           
           if [ "$httpCode" -eq 200 ]; then
             echo "Docker tag already exists. Skipping build."
@@ -63,7 +65,7 @@ jobs:
           echo "version=${{ needs.check-version-exists.outputs.version }}" >> $GITHUB_ENV
           TRANSFORMED_VERSION=v$(echo "${{ env.version }}" | sed -E 's/([0-9]+\.[0-9]+\.[0-9]+)\.([0-9]+)/\1-p\2/')
           echo "transformedVersion=$TRANSFORMED_VERSION" >> $GITHUB_ENV
-          echo "Using ${{ env.version }} from github tag ${{ env.transformedVersion }}"
+          echo "Using $version from github tag $transformedVersion"
 
       #Make sure the job does not run again if an error occured 
       - name: Tag the version in this Git
@@ -76,7 +78,7 @@ jobs:
         run: |
           git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
           cd ceremonyclient
-          git checkout -b $transformedVersion origin/${{ env.transformedVersion }}
+          git checkout -b ${{ env.transformedVersion }} origin/${{ env.transformedVersion }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
