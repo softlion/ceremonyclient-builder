@@ -118,8 +118,9 @@ jobs:
 
           DEST_DIR="client"
           grep "linux-amd64" "$FILE" | while IFS= read -r line || [ -n "$line" ]; do
-              URL="$BASE_URL/$line"
-              DEST_FILE=$(echo "$line" | sed -E 's/(qclient-)([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+(-linux-amd64.*)/\1\2\3/')
+              qclient=$(echo "$line" | sed 's/node/qclient/')
+              URL="$BASE_URL/$qclient"
+              DEST_FILE=$(echo "$qclient" | sed -E 's/(qclient-)([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+(-linux-amd64.*)/\1\2\3/')
               DEST_FILE="$DEST_DIR/$DEST_FILE"
           
               echo "Downloading $URL to $DEST_FILE"
@@ -137,7 +138,7 @@ jobs:
 
           sed -i '1s/.*/FROM golang:1.23.3-alpine3.20 AS build/' Dockerfile.release
           #qclient-2.0.4-linux-amd64
-          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "qclient-*-linux-amd64" "qclient"|' Dockerfile.release
+          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "qclient-\${NODE_VERSION}-linux-amd64" "qclient"|' Dockerfile.release
           sed -i 's/FROM alpine:3.19/FROM debian:bookworm-slim/' Dockerfile.release
           task build
 
