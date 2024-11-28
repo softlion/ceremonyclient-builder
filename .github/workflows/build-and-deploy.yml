@@ -132,7 +132,7 @@ jobs:
               fi
           done
           
-          version=$(awk -F'-' 'NR==1 {print $2}' release.txt)
+          version=$(awk -F'-' 'NR==1 {split($2, v, "."); print v[1]"."v[2]"."v[3]}' release.txt)
           chmod +x "node/node-$version-linux-amd64"
           chmod +x "client/qclient-$version-linux-amd64"
 
