@@ -2,7 +2,7 @@ send_stats: "/dns/stats.quilibrium.com/tcp/443"
 
 image:
   repository: vapolia/quilibrium
-  tag: "2.0.5"
+  tag: latest
   pullPolicy: Always
 
 ports:
