@@ -49,6 +49,26 @@ sudo sysctl --system
 Built by github action, it uses the official signed binaries and a slim debian container.  
 It is published on [docker hub](https://hub.docker.com/r/vapolia/quilibrium/tags)
 
+## Advanced configuration
+
+The root of the PV contains:
+- A `config.yml` file, in which you should set `maxFrames` to `1001` instead of the default `-1`. 
+That will prevent the node from taking 2TB of disk space after a few days.
+- A 'key.yml' file, that you should backup as soon as it is created.
+- A `store` folder, which can be deleted at any time to free up disk space (stop and restart the node before and after deleting files there).
+
+### Cleaning the store folder
+
+Stop the node temporarily, clean the store folder, then restart the node:  
+
+```shell
+kubectl scale deployment quilibrium --replicas=0
+sudo find /your-specific-path/store -mindepth 1 -delete
+kubectl scale deployment quilibrium --replicas=1
+```
+
+### 
+
 ## Links
 
 Sources:  
@@ -64,3 +84,6 @@ https://www.youtube.com/watch?v=GfEqWw-p_yU
 
 Dashboard:  
 https://github.com/fpatron/Quilibrium-Dashboard
+
+Advanced configuration:  
+https://docs.quilibrium.com/docs/run-node/advanced-configuration/
