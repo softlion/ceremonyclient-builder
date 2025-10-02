@@ -6,7 +6,7 @@ appVersion: 1.0.0
 home: https://vapolia.eu/
 icon: https://quilibrium.com/logo.png
 sources:
-  - https://source.quilibrium.com/quilibrium/ceremonyclient/
+  - https://github.com/QuilibriumNetwork/ceremonyclient
 maintainers:
   - name: softlion
     email: benjamin@vapolia.fr

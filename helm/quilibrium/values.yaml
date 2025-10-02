@@ -7,10 +7,17 @@ image:
 
 ports:
   p2p: 8336
+  p2pMaster: 8340
+  #streamListenMultiaddr: "/ip4/0.0.0.0/tcp/8340"
   grpc: 8337
   rest: 8338
   listen_grpc: "/ip4/0.0.0.0/tcp/" #grpc is appended automatically
   listen_rest: "/ip4/0.0.0.0/tcp/" #rest is appended automatically
+  #dataWorkerBaseListenMultiaddr: "/ip4/0.0.0.0/tcp/%d"
+  workers: 6
+  #1 worker:  ports 50000, 60000
+  #2 workers: ports 50000,50001, 60000, 60001
+  #...
 
 # config:
 #  .config: ""

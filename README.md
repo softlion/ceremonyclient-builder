@@ -67,13 +67,16 @@ sudo find /your-specific-path/store -mindepth 1 -delete
 kubectl scale deployment quilibrium --replicas=1
 ```
 
-### 
+### Recovering from failure
+
+```shell
+kubectl delete pods --field-selector=status.phase!=Running -A
+```
 
 ## Links
 
 Sources:  
 https://github.com/QuilibriumNetwork/ceremonyclient
-https://source.quilibrium.com/quilibrium/ceremonyclient
 
 Install Guides and tools:  
 https://github.com/0xOzgur/QuilibriumTools
