@@ -22,18 +22,18 @@ spec:
     port: {{ .Values.ports.p2p }}
     targetPort: 8336
 
-  - name: p2pMaster
+  - name: p2p-master
     protocol: UDP
     port: {{ .Values.ports.p2pMaster }}
     targetPort: 8340
 
   {{ range $i, $e := until (int .Values.ports.workers) }}
-  - name: worker1_p2p
+  - name: worker{{ $i }}-p2p
     protocol: UDP
     port: {{ 50000 | add $i }}
     targetPort: 50000
 
-  - name: worker1_stream
+  - name: worker{{ $i }}-stream
     protocol: UDP
     port: {{ 60000 | add $i }}
     targetPort: 60000
