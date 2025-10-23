@@ -78,7 +78,31 @@ jobs:
         run: |
           git clone https://github.com/QuilibriumNetwork/ceremonyclient.git
           cd ceremonyclient
-          git checkout -b $TRANSFORMED_VERSION origin/$TRANSFORMED_VERSION
+
+          # First, try to checkout the tag
+          if git ls-remote --tags origin | grep -q "refs/tags/$TRANSFORMED_VERSION$"; then
+            echo "Tag $TRANSFORMED_VERSION exists, checking out tag..."
+            git checkout -b $TRANSFORMED_VERSION origin/$TRANSFORMED_VERSION
+          else
+            echo "Tag $TRANSFORMED_VERSION does not exist, checking for merged PR with name v$VERSION..."
+
+            # Search for merged PR with exact version in title
+            PR_DATA=$(curl -s -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/QuilibriumNetwork/ceremonyclient/pulls?state=closed&per_page=100")
+
+            # Find PR with exact matching version in title and get merge commit SHA
+            MERGE_SHA=$(echo "$PR_DATA" | jq -r --arg ver "v$VERSION" \
+              '.[] | select(.title == $ver) | select(.merged_at != null) | .merge_commit_sha' | head -n 1)
+
+            if [ -z "$MERGE_SHA" ] || [ "$MERGE_SHA" == "null" ]; then
+              echo "ERROR: No tag $TRANSFORMED_VERSION found and no merged PR with version v$VERSION exists."
+              echo "Missing version: v$VERSION (tag format: $TRANSFORMED_VERSION)"
+              exit 1
+            fi
+
+            echo "Found merged PR for v$VERSION at commit $MERGE_SHA"
+            git checkout $MERGE_SHA
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
