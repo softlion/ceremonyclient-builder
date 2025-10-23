@@ -36,10 +36,13 @@ jobs:
         if: steps.version_check.outputs.build_required == 'true'
         id: tag_check
         run: |
+          VERSION="${{ steps.version_check.outputs.version }}"
           httpCode=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://hub.docker.com/v2/repositories/vapolia/quilibrium/tags/${{ steps.version_check.outputs.version }})/
-          
-          if [ "$httpCode" -eq 200 ]; then
+            "https://hub.docker.com/v2/repositories/vapolia/quilibrium/tags/$VERSION")
+
+          echo "HTTP code for tag $VERSION: $httpCode"
+
+          if [ "$httpCode" = "200" ]; then
             echo "Docker tag already exists. Skipping build."
             echo "build_required=false" >> $GITHUB_OUTPUT
           else
