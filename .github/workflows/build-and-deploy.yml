@@ -53,9 +53,11 @@ jobs:
     needs: check-version-exists
     if: needs.check-version-exists.outputs.build_required == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.set_docker_tag.outputs.docker_tag }}
     env:
       VERSION: ${{needs.check-version-exists.outputs.version}}
-      
+
     steps:
 
       - name: Checkout repository
@@ -184,6 +186,11 @@ jobs:
           docker tag quilibrium:release "vapolia/quilibrium:$TRANSFORMED_VERSION"
           docker push --all-tags vapolia/quilibrium
 
+      - name: Set Docker tag output
+        id: set_docker_tag
+        run: |
+          echo "docker_tag=$VERSION" >> $GITHUB_OUTPUT
+
 #docker run -it --entrypoint /bin/sh vapolia/quilibrium:2.0.4
 # docker run -it --name testquil --entrypoint bash 1bcc1d5bebf2
 # docker ps -a
@@ -209,4 +216,5 @@ jobs:
       - name: Upgrade Helm release
         run: |
           helm upgrade -n vapolia quilibrium helm/quilibrium --install \
-            --set persistence.existingClaim=quilibrium
+            --set persistence.existingClaim=quilibrium \
+            --set image.tag=${{ needs.build.outputs.docker_tag }}
