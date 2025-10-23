@@ -9,9 +9,13 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
     version: {{ .Chart.AppVersion | quote }}
-
+  {{- if .Values.service.annotations }}
+  annotations:
+    {{- toYaml .Values.service.annotations | nindent 4 }}
+  {{- end }}
+  
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: {{ template "chart.name" . }}
 

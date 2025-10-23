@@ -5,6 +5,11 @@ image:
   tag: latest
   pullPolicy: Always
 
+#TODO: move that in a m.vapolia.helm.yaml file
+service:
+  annotations:
+  #...
+
 ports:
   p2p: 8336
   p2pMaster: 8340
