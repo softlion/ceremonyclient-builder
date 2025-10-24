@@ -24,8 +24,12 @@ spec:
       - name: {{ template "chart.name" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+
         ports:
         - name: p2p
+          containerPort: {{ .Values.ports.p2p }}
+          protocol: UDP
+        - name: p2p-master
           containerPort: {{ .Values.ports.p2p }}
           protocol: UDP
         - name: grpc
@@ -34,8 +38,16 @@ spec:
         - name: rest
           containerPort: {{ .Values.ports.rest }}
           protocol: TCP
-        env:
+        {{ range $i, $e := until (int .Values.ports.workers) }}
+        - name: worker{{ $i }}-p2p
+          containerPort: {{ add 50000 $i }}
+          protocol: UDP
+        - name: worker{{ $i }}-stream
+          containerPort: {{ add 60000 $i }}
+          protocol: UDP
+        {{ end }}
 
+        env:
         - name: DEFAULT_LISTEN_GRPC_MULTIADDR
           value: {{ .Values.ports.listen_grpc }}{{ .Values.ports.grpc }}
 

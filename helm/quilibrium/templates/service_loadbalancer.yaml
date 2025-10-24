@@ -34,12 +34,12 @@ spec:
   {{ range $i, $e := until (int .Values.ports.workers) }}
   - name: worker{{ $i }}-p2p
     protocol: UDP
-    port: {{ 50000 | add $i }}
-    targetPort: 50000
+    port: {{ add 50000 $i }}
+    targetPort: {{ add 50000 $i }}
 
   - name: worker{{ $i }}-stream
     protocol: UDP
-    port: {{ 60000 | add $i }}
-    targetPort: 60000
+    port: {{ add 60000 $i }}
+    targetPort: {{ add 60000 $i }}
   {{ end }}
   

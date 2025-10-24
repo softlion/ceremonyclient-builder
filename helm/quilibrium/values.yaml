@@ -5,7 +5,6 @@ image:
   tag: latest
   pullPolicy: Always
 
-#TODO: move that in a m.vapolia.helm.yaml file
 service:
   annotations:
   #...
