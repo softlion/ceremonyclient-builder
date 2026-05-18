@@ -170,9 +170,9 @@ jobs:
         run: |
           cd monorepo
 
-          sed -i '1s/.*/FROM golang:1.23.3-alpine3.20 AS build/' Dockerfile.release
-          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "qclient-\${NODE_VERSION}-linux-amd64" "qclient"|' Dockerfile.release
-          sed -i 's/FROM alpine:3.19/FROM debian:bookworm-slim/' Dockerfile.release
+          sed -i '1s/.*/FROM golang:1.23.3-alpine3.20 AS build/' docker/Dockerfile.release
+          sed -i 's|RUN go build -o qclient ./main.go|RUN cp "qclient-\${NODE_VERSION}-linux-amd64" "qclient"|' docker/Dockerfile.release
+          sed -i 's/FROM alpine:3.19/FROM debian:bookworm-slim/' docker/Dockerfile.release
           task build
 
       - name: Login to Docker Hub
