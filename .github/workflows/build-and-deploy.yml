@@ -220,5 +220,6 @@ jobs:
         run: |
           helm upgrade -n vapolia quilibrium helm/quilibrium --install \
             --set persistence.existingClaim=quilibrium \
-            --set service.annotations."metallb\.universe\.tf/allow-shared-ip"=vapolia \
+            --set service.annotations."lbipam\.cilium\.io/sharing-cross-namespace"=* \
+            --set service.annotations."lbipam\.cilium\.io/sharing-key"=vapolia \
             --set image.tag=${{ needs.build.outputs.docker_tag }}
